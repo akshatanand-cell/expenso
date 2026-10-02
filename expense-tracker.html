@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expenso — Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel2: #1e222b;
+    --text: #e8eaf0;
+    --muted: #8b90a0;
+    --accent: #5eead4;
+    --danger: #f87171;
+    --border: #2a2f3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(94, 234, 212, 0.12), transparent 40%),
+      radial-gradient(circle at 85% 0%, rgba(129, 140, 248, 0.14), transparent 45%),
+      radial-gradient(circle at 50% 100%, rgba(248, 113, 113, 0.08), transparent 50%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Inter", Arial, sans-serif;
+    padding: 32px 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 760px; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; }
+  .brand { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.5px; }
+  .brand span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat {
+    background: linear-gradient(160deg, var(--panel), var(--panel2));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  }
+  .stat .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .stat .value { font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700; }
+  .stat.income .value { color: var(--accent); }
+  .stat.expense .value { color: var(--danger); }
+
+  .panel {
+    background: linear-gradient(180deg, var(--panel), var(--panel2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  .panel h2 { font-family: "Space Grotesk", sans-serif; font-size: 15px; margin: 0 0 14px; color: var(--muted); font-weight: 500; }
+
+  form { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; }
+  input, select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  button {
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #0f1115;
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; }
+  .filters button {
+    background: var(--panel2);
+    color: var(--muted);
+    font-weight: 500;
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+  .filters button.active { background: var(--accent); color: #0f1115; }
+
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  li:last-child { border-bottom: none; }
+  .tx-left { display: flex; flex-direction: column; }
+  .tx-name { font-weight: 500; }
+  .tx-cat { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .tx-right { display: flex; align-items: center; gap: 14px; }
+  .tx-amount { font-family: "Space Grotesk", sans-serif; font-weight: 700; }
+  .tx-amount.income { color: var(--accent); }
+  .tx-amount.expense { color: var(--danger); }
+  .tx-right button { background: transparent; color: var(--muted); padding: 4px 8px; font-size: 13px; }
+  .tx-right button:hover { color: var(--danger); opacity: 1; }
+
+  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 0; }
+
+  @media (max-width: 600px) {
+    form { grid-template-columns: 1fr 1fr; }
+    .summary { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">Expens<span>o</span></div>
+      <div class="tagline">Track what comes in, track what goes out.</div>
+    </div>
+  </header>
+
+  <section class="summary">
+    <div class="stat income">
+      <div class="label">Total Income</div>
+      <div class="value" id="totalIncome">₹0</div>
+    </div>
+    <div class="stat expense">
+      <div class="label">Total Expense</div>
+      <div class="value" id="totalExpense">₹0</div>
+    </div>
+    <div class="stat">
+      <div class="label">Balance</div>
+      <div class="value" id="balance">₹0</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Add Transaction</h2>
+    <form id="txForm">
+      <input type="text" id="txName" placeholder="e.g. Groceries" required>
+      <input type="number" id="txAmount" placeholder="Amount" min="1" required>
+      <select id="txType">
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+      </select>
+      <button type="submit">Add</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Transactions</h2>
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="income">Income</button>
+      <button data-filter="expense">Expense</button>
+    </div>
+    <ul id="txList"></ul>
+    <p class="empty" id="emptyMsg" style="display:none;">No transactions yet. Add one above.</p>
+  </section>
+</div>
+
+<script>
+  // All transactions live here. Each one: { id, name, amount, type }
+  let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+  let currentFilter = "all";
+
+  const form = document.getElementById("txForm");
+  const nameInput = document.getElementById("txName");
+  const amountInput = document.getElementById("txAmount");
+  const typeInput = document.getElementById("txType");
+  const list = document.getElementById("txList");
+  const emptyMsg = document.getElementById("emptyMsg");
+  const filterBtns = document.querySelectorAll("#filters button");
+
+  const totalIncomeEl = document.getElementById("totalIncome");
+  const totalExpenseEl = document.getElementById("totalExpense");
+  const balanceEl = document.getElementById("balance");
+
+  function save() {
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+  }
+
+  function formatMoney(num) {
+    return "₹" + num.toLocaleString("en-IN");
+  }
+
+  function updateSummary() {
+    const income = transactions
+      .filter(function (t) { return t.type === "income"; })
+      .reduce(function (sum, t) { return sum + t.amount; }, 0);
+
+    const expense = transactions
+      .filter(function (t) { return t.type === "expense"; })
+      .reduce(function (sum, t) { return sum + t.amount; }, 0);
+
+    totalIncomeEl.textContent = formatMoney(income);
+    totalExpenseEl.textContent = formatMoney(expense);
+    balanceEl.textContent = formatMoney(income - expense);
+  }
+
+  function render() {
+    list.innerHTML = "";
+
+    const visible = currentFilter === "all"
+      ? transactions
+      : transactions.filter(function (t) { return t.type === currentFilter; });
+
+    emptyMsg.style.display = visible.length === 0 ? "block" : "none";
+
+    visible.forEach(function (t) {
+      const li = document.createElement("li");
+
+      const left = document.createElement("div");
+      left.className = "tx-left";
+      left.innerHTML = '<span class="tx-name">' + t.name + '</span>' +
+                        '<span class="tx-cat">' + t.type + '</span>';
+
+      const right = document.createElement("div");
+      right.className = "tx-right";
+
+      const amount = document.createElement("span");
+      amount.className = "tx-amount " + t.type;
+      amount.textContent = (t.type === "income" ? "+" : "-") + formatMoney(t.amount);
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Remove";
+      delBtn.addEventListener("click", function () {
+        transactions = transactions.filter(function (tx) { return tx.id !== t.id; });
+        save();
+        render();
+        updateSummary();
+      });
+
+      right.append(amount, delBtn);
+      li.append(left, right);
+      list.appendChild(li);
+    });
+
+    updateSummary();
+  }
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const newTx = {
+      id: Date.now(),
+      name: nameInput.value.trim(),
+      amount: Number(amountInput.value),
+      type: typeInput.value
+    };
+
+    transactions.push(newTx);
+    save();
+    render();
+    form.reset();
+  });
+
+  filterBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      filterBtns.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>
