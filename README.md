@@ -20,8 +20,8 @@ A sleek, lightweight, dark-themed personal finance and expense tracker built wit
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/akshatanand-cell/expense-tracker.git
-cd expense-tracker
+git clone https://github.com/akshatanand-cell/expenso.git
+cd expenso
 ```
 
 ### 2. Run the application
